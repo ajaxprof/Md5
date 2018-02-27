@@ -26,7 +26,27 @@ public final class Md5HashServiceProvider implements IHashServiceProvider {
         operations = mode.get().getOperations();
     }
 
-    public String HexDigest(byte[] data) throws IOException {
+    public String HexDigest(byte[] data) {
+        String digest = null;
+        try {
+            digest = digest(data, Integer::toHexString);
+        } catch(IOException ex) {
+            ex.printStackTrace();
+        }
+        return digest;
+    }
+
+    public String BinaryDigest(byte[] data) {
+        String digest = null;
+        try {
+            digest = digest(data, Integer::toBinaryString);
+        } catch(IOException ex) {
+            ex.printStackTrace();
+        }
+        return digest;
+    }
+
+    private String digest(byte[] data, java.util.function.Function<Integer, String> transform) throws IOException {
 
         Integer AA = A;
         Integer BB = B;
@@ -168,7 +188,25 @@ public final class Md5HashServiceProvider implements IHashServiceProvider {
         CC = Integer.reverseBytes(CC);
         DD = Integer.reverseBytes(DD);
 
-        return String.format("%s%s%s%s", Integer.toHexString(AA), Integer.toHexString(BB), Integer.toHexString(CC), Integer.toHexString(DD));
+        //return String.format("%s%s%s%s", transform.apply(AA), transform.apply(BB), transform.apply(CC), transform.apply(DD));
+        byte[] AAbytes = ByteBuffer.allocate(4).putInt(AA).array();
+        byte[] BBbytes = ByteBuffer.allocate(4).putInt(BB).array();
+        byte[] CCbytes = ByteBuffer.allocate(4).putInt(CC).array();
+        byte[] DDbytes = ByteBuffer.allocate(4).putInt(DD).array();
+        String res = "";
+        for (int i = 0; i < 4; i++) {
+            res += String.format("%8s", Integer.toBinaryString(AAbytes[i] & 0xFF)).replace(' ', '0');
+        }
+        for (int i = 0; i < 4; i++) {
+            res += String.format("%8s", Integer.toBinaryString(BBbytes[i] & 0xFF)).replace(' ', '0');
+        }
+        for (int i = 0; i < 4; i++) {
+            res += String.format("%8s", Integer.toBinaryString(CCbytes[i] & 0xFF)).replace(' ', '0');
+        }
+        for (int i = 0; i < 4; i++) {
+            res += String.format("%8s", Integer.toBinaryString(DDbytes[i] & 0xFF)).replace(' ', '0');
+        }
+        return res;
     }
 
     private static List<Byte> appendixOf(byte[] data) {
